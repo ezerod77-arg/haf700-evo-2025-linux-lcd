@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 
+import argparse
 import glob
 import os
 import select
 import sys
+import time
 
 VID = "2516"
 PID = "0228"
@@ -121,11 +123,72 @@ def transact(command):
     return decode_response(data)
 
 
+def set_brightness(value):
+    if not 0 <= value <= 100:
+        raise ValueError(
+            "brightness debe estar entre 0 y 100"
+        )
+
+    body = f'{{"value":{value}}}'
+
+    command = (
+        "POST brightness 1\r\n"
+        "SeqNumber=44\r\n"
+        f"Date={int(time.time())}\r\n"
+        "ContentType=json\r\n"
+        f"ContentLength={len(body)}\r\n"
+        "\r\n"
+        f"{body}"
+    )
+
+    return transact(command)
+
+
 def main():
-    command = "POST getSKUColor 1\r\n"
+    parser = argparse.ArgumentParser(
+        description="HAF 700 EVO 2025 Linux HID client"
+    )
+
+    subparsers = parser.add_subparsers(
+        dest="command",
+        required=True
+    )
+
+    subparsers.add_parser(
+        "probe",
+        help="Test communication with HAF700 V2"
+    )
+
+    brightness_parser = subparsers.add_parser(
+        "brightness",
+        help="Set LCD brightness"
+    )
+
+    brightness_parser.add_argument(
+        "value",
+        type=int,
+        metavar="0-100",
+        help="Brightness percentage"
+    )
+
+    args = parser.parse_args()
 
     try:
-        response = transact(command)
+        if args.command == "probe":
+            response = transact(
+                "POST getSKUColor 1\r\n"
+            )
+
+        elif args.command == "brightness":
+            response = set_brightness(
+                args.value
+            )
+
+        else:
+            parser.error(
+                "comando desconocido"
+            )
+
     except Exception as exc:
         print(
             f"ERROR: {exc}",
