@@ -1,0 +1,16 @@
+[Unit]
+Description=HAF 700 EVO GPU telemetry display
+After=multi-user.target
+
+[Service]
+Type=simple
+User=ezequiel
+Group=ezequiel
+SupplementaryGroups=haf700
+WorkingDirectory=/opt/ia/repos/haf700-evo-2025-linux-lcd
+ExecStart=/usr/bin/python3 /opt/ia/repos/haf700-evo-2025-linux-lcd/tools/haf_gpu_display.py
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target
